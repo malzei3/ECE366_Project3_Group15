@@ -14,15 +14,17 @@ def saveJumpLabel(asm,labelIndex, labelName):
         asm.remove('\n')
 
 
-def machineTranslation(program): # Translates the assembly to machine code and stores it back in program []
-    PC = 0
+# Translates the assembly to machine code and stores it back in program []
+def machineTranslation(program):
+    PC = 0 # Used to end the while loop
     instructionList = {'addi': 1000} # Stores the opcodes of all our assembly instructions
-    machineCode = []
+    machineCode = [] # Stores the final binary data
+    i = 0 # Used to update machineCode
 
-    while(PC < len(program)):
-        instruction = program[PC]
-        print(instruction)
+    while(PC < len(program)): # Goes through all the instructions in the program
+        instruction = program[PC] # Sets instruction to the current instruction we are translating
 
+        # This keeps track of where the opcode ends (Because there would be a space there)
         spaceLocation = 0
         for char in instruction:
             if char == ' ':
@@ -31,31 +33,40 @@ def machineTranslation(program): # Translates the assembly to machine code and s
             else:
                 spaceLocation += 1
 
+        # Below code translates the enlgish opcode to binary and checks for errors
         opcode = instruction[0:spaceLocation] # Grabs the english string of the opcode
-        print(opcode)
         binaryOpcode = instructionList.get(opcode) # Replaces the english text opcode with the binary one
         if binaryOpcode == None: # Gives error if the opcode is not supported by instructionList (for debuging purposes)
             print("Instruction not implemented, please check!")
             print("Error instruction '" + opcode + "' not supported.")
             quit()
-        print(binaryOpcode)
 
+        # Grabs the english data for the 2 bits after the opcode and translates it to binary
         rx = instruction[spaceLocation + 2:spaceLocation + 3] # Grabs the next two bits as an english string
         binaryRx = "{0:2b}".format(int(rx)) # Converts to binary
-        print(binaryRx)
-        print(rx)
 
+        # Grabs the english data for the last 2 bits and translates it to binary
         ry = instruction[spaceLocation + 5:] # Grabs the rest of the data as a english string NOTE: ry can also be imm
         binaryRy = "{0:2b}".format(int(ry))
-        for blank in binaryRy:
-            blank.replace('', '0')
-        print(ry)
+
+        # Adds all the binary data into machineCode. NOTE: The data has spaces which need to be fixed by the for loop
         machineCode.append(str(binaryOpcode) + str(binaryRx) + str(binaryRy))
-        for blank in machineCode:
-            if '' in blank:
-                print("yes")
+        incompleteMachineCode = machineCode[i]
+        completeMachineCode = ''
+        print(incompleteMachineCode)
+        for char in incompleteMachineCode:
+            if char == ' ':
+                char = '0'
+            else:
+                pass
+            completeMachineCode += char
+            print("The complete machine code for the instruction is " + completeMachineCode)
+        machineCode[i] = completeMachineCode # The correct final binary value is now in machineCode
+        print("The machine code for the program is ")
         print(machineCode)
-        PC += 4
+        PC += 4 # Used to end the while loop
+        i += 1 # Used to update machineCode
+    return machineCode
 
 
 # Function reads binary code instruction
@@ -80,10 +91,12 @@ def sim(program):
         #print(hex(int(fetch, 2)), PC)
         # ----------------------------------------------------------------------------------------------- ADDI Done!
         if fetch[0:4] == '1000': # Reads the Opcode
+            print("Will now addi")
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
-            imm = -(256 - int(fetch[6:], 2)) if fetch[6] == '1' else int(fetch[6:], 2) # Reads the immediate
+            imm = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] + imm
+            print("register " + str(rx) + " is now added by " + str(imm))
 
         else:
             # This is not implemented on purpose
@@ -158,7 +171,7 @@ def main():
     # We SHALL start the simulation!
     print(program)
     machineCode = machineTranslation(program) # Translates the english assembly code to machine code
-    #sim(machineCode)
+    sim(machineCode)
 
 if __name__ == '__main__':
     main()
