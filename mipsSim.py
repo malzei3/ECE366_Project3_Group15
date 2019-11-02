@@ -1,5 +1,36 @@
 from __future__ import print_function
 
+# Start of program
+def main():
+    file = open("test.asm", "r") # Opens the file
+    asm = file.readlines() # Gets a list of every line in file
+
+    program = [] # Whats this?
+
+    for line in asm:    # For every line in the asm file
+        if line.count('#'):
+            line = list(line)
+            line[line.index('#'):-1] = ''
+            line = ''.join(line)
+
+        # Removes empty lines from the file
+        if line[0] == '\n':
+            continue
+        line = line.replace('\n','')
+
+        instr = line[0:]
+        program.append(instr)
+        program.append(0)           # since PC increment by 4 every cycle,
+        program.append(0)           # let's align the program code by every 4 lines
+        program.append(0)
+
+    # We SHALL start the simulation!
+    print("The code that will be converted to binary is ")
+    print(program)
+    machineCode = machineTranslation(program) # Translates the english assembly code to machine code
+    sim(machineCode) # Starts the assembly simulation with the assembly program machine code as input
+
+
 # Remember where each of the jump label is, and the target location 
 def saveJumpLabel(asm,labelIndex, labelName):
     lineCount = 0
@@ -19,7 +50,6 @@ def machineTranslation(program):
     PC = 0 # Used to end the while loop
     instructionList = {'addi': 1000} # Stores the opcodes of all our assembly instructions
     machineCode = [] # Stores the final binary data
-    i = 0 # Used to update machineCode
 
     while(PC < len(program)): # Goes through all the instructions in the program
         instruction = program[PC] # Sets instruction to the current instruction we are translating
@@ -51,25 +81,22 @@ def machineTranslation(program):
 
         # Adds all the binary data into machineCode. NOTE: The data has spaces which need to be fixed by the for loop
         machineCode.append(str(binaryOpcode) + str(binaryRx) + str(binaryRy))
-        print(machineCode)
-        incompleteMachineCode = machineCode[i]
-        completeMachineCode = ''
-        print(incompleteMachineCode)
+        incompleteMachineCode = machineCode[PC] # This machine code will have spaces in it which will be fixed
+        completeMachineCode = '' # This will contain the fixed machineCode
         for char in incompleteMachineCode:
             if char == ' ':
                 char = '0'
             else:
                 pass
             completeMachineCode += char
-            print("The complete machine code for the instruction is " + completeMachineCode)
-        machineCode[i] = completeMachineCode # The correct final binary value is now in machineCode
-        print("The machine code for the program is ")
-        print(machineCode)
+        print("The complete machine code for the instruction is " + completeMachineCode)
+        machineCode[PC] = completeMachineCode # The correct final binary value is now in machineCode
         machineCode.append(0)  # since PC increment by 4 every cycle,
         machineCode.append(0)  # let's align the program code by every 4 lines
         machineCode.append(0)
         PC += 4 # Used to end the while loop
-        i += 4 # Used to update machineCode
+    print("The machine code for the program is ")
+    print(machineCode)
     return machineCode
 
 
@@ -92,7 +119,6 @@ def sim(program):
 
 
         # HERES WHERE THE INSTRUCTIONS GO!
-        #print(hex(int(fetch, 2)), PC)
         # ----------------------------------------------------------------------------------------------- ADDI Done!
         if fetch[0:4] == '1000': # Reads the Opcode
             print("Will now addi")
@@ -105,10 +131,7 @@ def sim(program):
 
         else:
             # This is not implemented on purpose
-            pass
-            #print('Not implemented\n')
-        
-        #printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+            print('Not implemented\n')
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
@@ -118,14 +141,13 @@ def sim(program):
 
 def printInfo(_register, _DIC, _mem, _PC):
     num = int(_PC/4)
-    #inst = asmCopy[num-1]
+    #NOTE: I dont know what these 3 lines do so i just left them
+    #inst = asmCopy[num-1] #
     #inst = inst.replace("\n",'')
    # print('******* Instruction Number ' + str(num) + '. ' + inst + ' : *********\n')
     print('Registers $8 - $23 \n', _register)
     print('\nDynamic Instr Count ', _DIC)
     print('\nMemory contents 0x2000 - 0x2050 ', _mem)
-    #print('\nhi = ', _hi)
-    #print('lo = ', _lo)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
 
@@ -145,38 +167,6 @@ def ConvertHexToInt(_line):
             
     return _line
 
-
-
-def main():
-    file = open("test.asm", "r") # Opens the file
-    asm = file.readlines() # Gets a list of every line in file
-
-    program = [] # Whats this?
-
-    for line in asm:    # For every line in the asm file
-
-         # Not sure what this does.
-        if line.count('#'):
-            line = list(line)
-            line[line.index('#'):-1] = ''
-            line = ''.join(line)
-
-        # Removes empty lines from the file
-        if line[0] == '\n':
-            continue
-        line = line.replace('\n','')
-
-        instr = line[0:]
-        program.append(instr)
-        program.append(0)           # since PC increment by 4 every cycle,
-        program.append(0)           # let's align the program code by every 4 lines
-        program.append(0)
-        print(line)
-
-    # We SHALL start the simulation!
-    print(program)
-    machineCode = machineTranslation(program) # Translates the english assembly code to machine code
-    sim(machineCode)
 
 if __name__ == '__main__':
     main()
