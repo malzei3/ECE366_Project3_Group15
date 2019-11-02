@@ -1,27 +1,4 @@
 from __future__ import print_function
-import os
-
-
-# FUNCTION: read input file
-def SelectFile(defaultFile):
-
-    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
-
-    # Select  file, default is prog.asm
-    while True:
-        cktFile = defaultFile
-        print("\nRead asm file: use " + cktFile + "?" + " Enter to accept or type filename: ")
-        userInput = input()
-        if userInput == "":
-            userInput = defaultFile
-            return userInput
-        else:
-            cktFile = os.path.join(script_dir, userInput)
-            if not os.path.isfile(cktFile):
-                print("File does not exist. \n")
-            else:
-                return userInput
-
 
 # Remember where each of the jump label is, and the target location 
 def saveJumpLabel(asm,labelIndex, labelName):
@@ -37,17 +14,59 @@ def saveJumpLabel(asm,labelIndex, labelName):
         asm.remove('\n')
 
 
+def machineTranslation(program): # Translates the assembly to machine code and stores it back in program []
+    PC = 0
+    instructionList = {'addi': 1000} # Stores the opcodes of all our assembly instructions
+    machineCode = []
+
+    while(PC < len(program)):
+        instruction = program[PC]
+        print(instruction)
+
+        spaceLocation = 0
+        for char in instruction:
+            if char == ' ':
+                #print("Space location at " + str(spaceLocation))
+                break
+            else:
+                spaceLocation += 1
+
+        opcode = instruction[0:spaceLocation] # Grabs the english string of the opcode
+        print(opcode)
+        binaryOpcode = instructionList.get(opcode) # Replaces the english text opcode with the binary one
+        if binaryOpcode == None: # Gives error if the opcode is not supported by instructionList (for debuging purposes)
+            print("Instruction not implemented, please check!")
+            print("Error instruction '" + opcode + "' not supported.")
+            quit()
+        print(binaryOpcode)
+
+        rx = instruction[spaceLocation + 2:spaceLocation + 3] # Grabs the next two bits as an english string
+        binaryRx = "{0:2b}".format(int(rx)) # Converts to binary
+        print(binaryRx)
+        print(rx)
+
+        ry = instruction[spaceLocation + 5:] # Grabs the rest of the data as a english string NOTE: ry can also be imm
+        binaryRy = "{0:2b}".format(int(ry))
+        for blank in binaryRy:
+            blank.replace('', '0')
+        print(ry)
+        machineCode.append(str(binaryOpcode) + str(binaryRx) + str(binaryRy))
+        for blank in machineCode:
+            if '' in blank:
+                print("yes")
+        print(machineCode)
+        PC += 4
+
+
 # Function reads binary code instruction
 def sim(program):
-    hilo = [0] * 64
-    hi = 0
-    lo = 0
     finished = False      # Is the simulation finished? 
     PC = 0                # Program Counter
-    register = [0] * 32   # Let's initialize 32 empty registers
+    register = [0] * 4   # Let's initialize 4 empty registers
     mem = [0] * 12288     # Let's initialize 0x3000 or 12288 spaces in memory. I know this is inefficient...
                           # But my machine has 16GB of RAM, its ok :)
     DIC = 0               # Dynamic Instr Count
+
     while(not(finished)):
         if PC == len(program) - 4:
             finished = True
@@ -55,24 +74,27 @@ def sim(program):
             break
         fetch = program[PC]
         DIC += 1
-        #print(hex(int(fetch,2)), PC)
+
+
+        # HERES WHERE THE INSTRUCTIONS GO!
+        #print(hex(int(fetch, 2)), PC)
         # ----------------------------------------------------------------------------------------------- ADDI Done!
-        if fetch[0:6] == '001000': 
+        if fetch[0:4] == '1000': # Reads the Opcode
             PC += 4
-            s = int(fetch[6:11],2)
-            t = int(fetch[11:16],2)
-            imm = -(65536 - int(fetch[16:],2)) if fetch[16]=='1' else int(fetch[16:],2)
-            register[t] = register[s] + imm
-        
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            imm = -(256 - int(fetch[6:], 2)) if fetch[6] == '1' else int(fetch[6:], 2) # Reads the immediate
+            register[rx] = register[rx] + imm
+
         else:
             # This is not implemented on purpose
-            print('Not implemented\n')
+            pass
+            #print('Not implemented\n')
         
-        printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+        #printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+    #printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
     input()
 
 
@@ -108,25 +130,35 @@ def ConvertHexToInt(_line):
 
 
 def main():
-    file = open(SelectFile("prog.asm"), r)
+    file = open("test.asm", "r") # Opens the file
+    asm = file.readlines() # Gets a list of every line in file
 
-    program = []
-    for line in file:
+    program = [] # Whats this?
+
+    for line in asm:    # For every line in the asm file
+
+         # Not sure what this does.
         if line.count('#'):
             line = list(line)
             line[line.index('#'):-1] = ''
             line = ''.join(line)
+
+        # Removes empty lines from the file
         if line[0] == '\n':
             continue
         line = line.replace('\n','')
+
         instr = line[0:]
         program.append(instr)       # since PC increment by 4 every cycle,
         program.append(0)           # let's align the program code by every
         program.append(0)           # 4 lines
         program.append(0)
+        print(line)
 
-    # We SHALL start the simulation! 
-    sim(program)
+    # We SHALL start the simulation!
+    print(program)
+    machineCode = machineTranslation(program) # Translates the english assembly code to machine code
+    #sim(machineCode)
 
 if __name__ == '__main__':
     main()
