@@ -33,7 +33,7 @@ def machineTranslation(program):
             else:
                 spaceLocation += 1
 
-        # Below code translates the enlgish opcode to binary and checks for errors
+        # Below code translates the english opcode to binary and checks for errors
         opcode = instruction[0:spaceLocation] # Grabs the english string of the opcode
         binaryOpcode = instructionList.get(opcode) # Replaces the english text opcode with the binary one
         if binaryOpcode == None: # Gives error if the opcode is not supported by instructionList (for debuging purposes)
@@ -51,6 +51,7 @@ def machineTranslation(program):
 
         # Adds all the binary data into machineCode. NOTE: The data has spaces which need to be fixed by the for loop
         machineCode.append(str(binaryOpcode) + str(binaryRx) + str(binaryRy))
+        print(machineCode)
         incompleteMachineCode = machineCode[i]
         completeMachineCode = ''
         print(incompleteMachineCode)
@@ -64,8 +65,11 @@ def machineTranslation(program):
         machineCode[i] = completeMachineCode # The correct final binary value is now in machineCode
         print("The machine code for the program is ")
         print(machineCode)
+        machineCode.append(0)  # since PC increment by 4 every cycle,
+        machineCode.append(0)  # let's align the program code by every 4 lines
+        machineCode.append(0)
         PC += 4 # Used to end the while loop
-        i += 1 # Used to update machineCode
+        i += 4 # Used to update machineCode
     return machineCode
 
 
@@ -97,6 +101,7 @@ def sim(program):
             imm = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] + imm
             print("register " + str(rx) + " is now added by " + str(imm))
+            print(register[rx])
 
         else:
             # This is not implemented on purpose
@@ -107,20 +112,20 @@ def sim(program):
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    #printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+    printInfo(register[0:3],DIC,mem[8192:8272], PC)
     input()
 
 
-def printInfo(_register, _DIC, _hi, _lo, _mem, _PC):
+def printInfo(_register, _DIC, _mem, _PC):
     num = int(_PC/4)
     #inst = asmCopy[num-1]
-    inst = inst.replace("\n",'')
-    print('******* Instruction Number ' + str(num) + '. ' + inst + ' : *********\n')
+    #inst = inst.replace("\n",'')
+   # print('******* Instruction Number ' + str(num) + '. ' + inst + ' : *********\n')
     print('Registers $8 - $23 \n', _register)
     print('\nDynamic Instr Count ', _DIC)
     print('\nMemory contents 0x2000 - 0x2050 ', _mem)
-    print('\nhi = ', _hi)
-    print('lo = ', _lo)
+    #print('\nhi = ', _hi)
+    #print('lo = ', _lo)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
 
@@ -162,9 +167,9 @@ def main():
         line = line.replace('\n','')
 
         instr = line[0:]
-        program.append(instr)       # since PC increment by 4 every cycle,
-        program.append(0)           # let's align the program code by every
-        program.append(0)           # 4 lines
+        program.append(instr)
+        program.append(0)           # since PC increment by 4 every cycle,
+        program.append(0)           # let's align the program code by every 4 lines
         program.append(0)
         print(line)
 
