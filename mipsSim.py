@@ -33,6 +33,7 @@ def main():
     #machineCode = machineTranslation(program) # Translates the english assembly code to machine code
     sim(program) # Starts the assembly simulation with the assembly program machine code as # FUNCTION: read input file
 
+
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: Ask user to enter the file name. If user press enter the applicaiton will take the default file.
 def SelectFile(defaultFile):
@@ -54,19 +55,6 @@ def SelectFile(defaultFile):
             else:
                 return userInput
 
-# -------------------------------------------------------------------------------------------------------------------- #
-#---- FUNCTION: Remember where each of the jump label is, and the target location 
-def saveJumpLabel(asm,labelIndex, labelName):
-    lineCount = 0
-    for line in asm:
-        line = line.replace(" ","")
-        if(line.count(":")):
-            labelName.append(line[0:line.index(":")]) # append the label name
-            labelIndex.append(lineCount) # append the label's index
-            asm[lineCount] = line[line.index(":")+1:]
-        lineCount += 1
-    for item in range(asm.count('\n')): # Remove all empty lines '\n'
-        asm.remove('\n')
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: Translates the assembly to machine code and stores it back in program []
@@ -146,76 +134,118 @@ def sim(program):
 
 
         # HERES WHERE THE INSTRUCTIONS GO!
-        # ----------------------------------------------------------------------------------------------- ADDI
-        if fetch[0:4] == '0000': # Reads the Opcode
+        # ----------------------------------------------------------------------------------------------- addi
+        if fetch[0:4] == '1000': # Reads the Opcode
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             imm = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] + imm
             # print out the updates
             instruction = "addi $" + str(rx) + ", " + str(imm)
-            instrDescription = "register " + str(rx) + " is now added by " + str(imm)
+            instrDescription = "Register " + str(rx) + " is now added by " + str(imm)
 
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0001': # Reads the Opcode
+
+        # ----------------------------------------------------------------------------------------------- init
+        elif fetch[0:4] == '00': # Reads the Opcode
             PC += 4
+            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
+            imm = int(fetch[4:], 2) # Reads the immediate
+            register[rx] = imm
+            # print out the updates
+            instruction = "init $" + str(rx) + ", " + str(imm)
+            instrDescription = "Register " + str(rx) + " is now equal to " + str(imm)
 
 
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0010': # Reads the Opcode
-            PC += 4
-
-
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0011': # Reads the Opcode
-            PC += 4
-
-
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0100': # Reads the Opcode
-            PC += 4
-
-
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0101': # Reads the Opcode
-            PC += 4
-
-
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '0110': # Reads the Opcode
-            PC += 4
-
-
-        # ----------------------------------------------------------------------------------------------- 
+        # ----------------------------------------------------------------------------------------------- sub
         elif fetch[0:4] == '0111': # Reads the Opcode
             PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            register[rx] = register[rx] - register[ry]
+            # print out the updates
+            instruction = "sub $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(register[ry])
 
 
-        # ----------------------------------------------------------------------------------------------- 
-        elif fetch[0:4] == '1000': # Reads the Opcode
+        # ----------------------------------------------------------------------------------------------- bezR0
+        elif fetch[0:4] == '1011': # Reads the Opcode
+            imm = int(fetch[4:], 2) # Reads the immediate
+            if register[0] == 0:
+                PC = PC + (imm*4)
+            else:
+                PC += 4
+            # print out the updates
+            instruction = "bezR0 " + str(imm)
+            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+
+
+        # ----------------------------------------------------------------------------------------------- end
+        elif fetch[0:4] == '0100': # Reads the Opcode
+            instruction = "end "
+            instrDescription = "The program stopped!! "
+            break
+
+        # ----------------------------------------------------------------------------------------------- jmp 
+        elif fetch[0:4] == '0101': # Reads the Opcode
+            imm = int(fetch[4:], 2) # Reads the immediate
+            PC = PC + (imm*4)
+            # print out the updates
+            instruction = "jmp " + str(imm)
+            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+
+        # ----------------------------------------------------------------------------------------------- eq
+        elif fetch[0:4] == '0110': # Reads the Opcode
             PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
 
+            if register[rx] == register[ry]:
+                register[rx] = 1
+                instrDescription = "Register " + str(rx) + " is equal to " + str(register[ry]) + ". Register " +  str(rx) + " is now equal to 1."
+            else:
+                register[rx] = 0
+                instrDescription = "Register " + str(rx) + " is not equal to " + str(register[ry]) + ". Register " +  str(rx) + " is now equal to 0."
 
-        # ----------------------------------------------------------------------------------------------- 
+            # print out the updates
+            instruction = "eq $" + str(rx) + ", $" + str(ry)
+
+        # ----------------------------------------------------------------------------------------------- sb
         elif fetch[0:4] == '1001': # Reads the Opcode
             PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            mem[register[ry]] = register[rx]
+            # print out the updates
+            instruction = "sb $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Memory address " + str(register[ry]) + " is now equal to " + str(register[rx])
 
-
-        # ----------------------------------------------------------------------------------------------- 
+        # ----------------------------------------------------------------------------------------------- lb
         elif fetch[0:4] == '1010': # Reads the Opcode
             PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            register[rx] = mem[register[ry]]
+            # print out the updates
+            instruction = "lb $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
 
+        # ----------------------------------------------------------------------------------------------- hash
+        elif fetch[0:4] == '1100': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
         
         else:
             # This is not implemented on purpose
             print('Not implemented\n')
             PC += 4
-        printInfo(register,DIC,mem[8192:8272], PC, instruction, instrDescription)
+        printInfo(register,DIC,mem[0:100], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register,DIC,mem[8192:8272], PC,"","")
+    printInfo(register,DIC,mem[0:100], PC,instruction,instrDescription)
     input()
+
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: to print out each instruction line is running with its updates 
@@ -225,10 +255,11 @@ def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     print(instrDes)
     print('\nRegisters $0- $4 \n', _register)
     print('\nDynamic Instr Count ', _DIC)
-    print('\nMemory contents 0x2000 - 0x2050 ', _mem)
+    print('\nMemory contents 0xff - 0x64 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
     input()
+
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: Convert line from hex into bin
@@ -238,6 +269,7 @@ def ConvertHexToBin(_line):
     _line = str(bin(int(_line, 16)).zfill(8))
     _line = _line.replace("0b","")
     return _line
+
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: Convert the hex into int in an asm instruction. ex: lw $t, offset($s) converts offset to int.

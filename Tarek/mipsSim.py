@@ -1,8 +1,41 @@
 from __future__ import print_function
 import os
 
+# Start of program
+def main():
+    file = open(SelectFile("prog.txt"), 'r') # Opens the file
+    asm = file.readlines() # Gets a list of every line in file
 
-# FUNCTION: read input file
+    program = [] # Whats this? list
+
+    for line in asm:    # For every line in the asm file
+        if line.count('#'):
+            line = list(line)
+            line[line.index('#'):-1] = ''
+            line = ''.join(line)
+
+        # Removes empty lines from the file
+        if line[0] == '\n':
+            continue
+        line = line.replace('\n','')
+
+        #If user entered a Hex file
+        if line.count("0x"):
+            line = ConvertHexToBin(line)
+
+        instr = line[0:]
+        program.append(instr)
+        program.append(0)           # since PC increment by 4 every cycle,
+        program.append(0)           # let's align the program code by every 4 lines
+        program.append(0)
+
+    # We SHALL start the simulation!
+    #machineCode = machineTranslation(program) # Translates the english assembly code to machine code
+    sim(program) # Starts the assembly simulation with the assembly program machine code as # FUNCTION: read input file
+
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Ask user to enter the file name. If user press enter the applicaiton will take the default file.
 def SelectFile(defaultFile):
 
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
@@ -23,73 +56,223 @@ def SelectFile(defaultFile):
                 return userInput
 
 
-# Remember where each of the jump label is, and the target location 
-def saveJumpLabel(asm,labelIndex, labelName):
-    lineCount = 0
-    for line in asm:
-        line = line.replace(" ","")
-        if(line.count(":")):
-            labelName.append(line[0:line.index(":")]) # append the label name
-            labelIndex.append(lineCount) # append the label's index
-            asm[lineCount] = line[line.index(":")+1:]
-        lineCount += 1
-    for item in range(asm.count('\n')): # Remove all empty lines '\n'
-        asm.remove('\n')
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Translates the assembly to machine code and stores it back in program []
+def machineTranslation(program):
+    PC = 0 # Used to end the while loop
+    instructionList = {'addi': 1000} # Stores the opcodes of all our assembly instructions
+    machineCode = [] # Stores the final binary data
+
+    while(PC < len(program)): # Goes through all the instructions in the program
+        instruction = program[PC] # Sets instruction to the current instruction we are translating
+
+        # This keeps track of where the opcode ends (Because there would be a space there)
+        spaceLocation = 0
+        for char in instruction:
+            if char == ' ':
+                #print("Space location at " + str(spaceLocation))
+                break
+            else:
+                spaceLocation += 1
+
+        # Below code translates the english opcode to binary and checks for errors
+        opcode = instruction[0:spaceLocation] # Grabs the english string of the opcode
+        binaryOpcode = instructionList.get(opcode) # Replaces the english text opcode with the binary one
+        if binaryOpcode == None: # Gives error if the opcode is not supported by instructionList (for debuging purposes)
+            print("Instruction not implemented, please check!")
+            print("Error instruction '" + opcode + "' not supported.")
+            quit()
+
+        # Grabs the english data for the 2 bits after the opcode and translates it to binary
+        rx = instruction[spaceLocation + 2:spaceLocation + 3] # Grabs the next two bits as an english string
+        binaryRx = "{0:2b}".format(int(rx)) # Converts to binary
+
+        # Grabs the english data for the last 2 bits and translates it to binary
+        ry = instruction[spaceLocation + 5:] # Grabs the rest of the data as a english string NOTE: ry can also be imm
+        binaryRy = "{0:2b}".format(int(ry))
+
+        # Adds all the binary data into machineCode. NOTE: The data has spaces which need to be fixed by the for loop
+        machineCode.append(str(binaryOpcode) + str(binaryRx) + str(binaryRy))
+        incompleteMachineCode = machineCode[PC] # This machine code will have spaces in it which will be fixed
+        completeMachineCode = '' # This will contain the fixed machineCode
+        for char in incompleteMachineCode:
+            if char == ' ':
+                char = '0'
+            else:
+                pass
+            completeMachineCode += char
+        print("The complete machine code for the instruction is " + completeMachineCode)
+        machineCode[PC] = completeMachineCode # The correct final binary value is now in machineCode
+        machineCode.append(0)  # since PC increment by 4 every cycle,
+        machineCode.append(0)  # let's align the program code by every 4 lines
+        machineCode.append(0)
+        PC += 4 # Used to end the while loop
+    print("The machine code for the program is ")
+    print(machineCode)
+    return machineCode
 
 
-# Function reads binary code instruction
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: TBD
 def sim(program):
-    hilo = [0] * 64
-    hi = 0
-    lo = 0
     finished = False      # Is the simulation finished? 
     PC = 0                # Program Counter
-    register = [0] * 32   # Let's initialize 32 empty registers
+    register = [0] * 4   # Let's initialize 4 empty registers
     mem = [0] * 12288     # Let's initialize 0x3000 or 12288 spaces in memory. I know this is inefficient...
                           # But my machine has 16GB of RAM, its ok :)
     DIC = 0               # Dynamic Instr Count
+
     while(not(finished)):
+        instruction = ""
+        instrDescription = ""
         if PC == len(program) - 4:
             finished = True
         if PC >= len(program):
             break
         fetch = program[PC]
         DIC += 1
-        #print(hex(int(fetch,2)), PC)
-        # ----------------------------------------------------------------------------------------------- ADDI Done!
-        if fetch[0:6] == '001000': 
+
+
+        # HERES WHERE THE INSTRUCTIONS GO!
+        # ----------------------------------------------------------------------------------------------- addi
+        if fetch[0:4] == '1000': # Reads the Opcode
             PC += 4
-            s = int(fetch[6:11],2)
-            t = int(fetch[11:16],2)
-            imm = -(65536 - int(fetch[16:],2)) if fetch[16]=='1' else int(fetch[16:],2)
-            register[t] = register[s] + imm
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            imm = int(fetch[6:], 2) # Reads the immediate
+            register[rx] = register[rx] + imm
+            # print out the updates
+            instruction = "addi $" + str(rx) + ", " + str(imm)
+            instrDescription = "Register " + str(rx) + " is now added by " + str(imm)
+
+
+        # ----------------------------------------------------------------------------------------------- init
+        elif fetch[0:4] == '00': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
+            imm = int(fetch[4:], 2) # Reads the immediate
+            register[rx] = imm
+            # print out the updates
+            instruction = "init $" + str(rx) + ", " + str(imm)
+            instrDescription = "Register " + str(rx) + " is now equal to " + str(imm)
+
+
+        # ----------------------------------------------------------------------------------------------- sub
+        elif fetch[0:4] == '0111': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            register[rx] = register[rx] - register[ry]
+            # print out the updates
+            instruction = "sub $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(register[ry])
+
+
+        # ----------------------------------------------------------------------------------------------- bezR0
+        elif fetch[0:4] == '1011': # Reads the Opcode
+            imm = int(fetch[4:], 2) # Reads the immediate
+            if register[0] == 0:
+                PC = PC + (imm*4)
+            else:
+                PC += 4
+            # print out the updates
+            instruction = "bezR0 " + str(imm)
+            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+
+
+        # ----------------------------------------------------------------------------------------------- end
+        elif fetch[0:4] == '0100': # Reads the Opcode
+            instruction = "end "
+            instrDescription = "The program stopped!! "
+            break
+
+        # ----------------------------------------------------------------------------------------------- jmp 
+        elif fetch[0:4] == '0101': # Reads the Opcode
+            imm = int(fetch[4:], 2) # Reads the immediate
+            PC = PC + (imm*4)
+            # print out the updates
+            instruction = "jmp " + str(imm)
+            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+
+        # ----------------------------------------------------------------------------------------------- eq
+        elif fetch[0:4] == '0110': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+
+            if register[rx] == register[ry]:
+                register[rx] = 1
+                instrDescription = "Register " + str(rx) + " is equal to " + str(register[ry]) + ". Register " +  str(rx) + " is now equal to 1."
+            else:
+                register[rx] = 0
+                instrDescription = "Register " + str(rx) + " is not equal to " + str(register[ry]) + ". Register " +  str(rx) + " is now equal to 0."
+
+            # print out the updates
+            instruction = "eq $" + str(rx) + ", $" + str(ry)
+
+        # ----------------------------------------------------------------------------------------------- sb
+        elif fetch[0:4] == '1001': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            mem[register[ry]] = register[rx]
+            # print out the updates
+            instruction = "sb $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Memory address " + str(register[ry]) + " is now equal to " + str(register[rx])
+
+        # ----------------------------------------------------------------------------------------------- lb
+        elif fetch[0:4] == '1010': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
+            register[rx] = mem[register[ry]]
+            # print out the updates
+            instruction = "lb $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
+
+        # ----------------------------------------------------------------------------------------------- hash
+        elif fetch[0:4] == '1100': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:], 2) # Reads the immediate
         
         else:
             # This is not implemented on purpose
             print('Not implemented\n')
-        
-        printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+            PC += 4
+        printInfo(register,DIC,mem[0:100], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register[8:23],DIC,hi,lo,mem[8192:8272], PC)
+    printInfo(register,DIC,mem[0:100], PC,instruction,instrDescription)
     input()
 
 
-def printInfo(_register, _DIC, _hi, _lo, _mem, _PC):
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: to print out each instruction line is running with its updates 
+def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     num = int(_PC/4)
-    #inst = asmCopy[num-1]
-    inst = inst.replace("\n",'')
-    print('******* Instruction Number ' + str(num) + '. ' + inst + ' : *********\n')
-    print('Registers $8 - $23 \n', _register)
+    print('******* Instruction Number ' + str(num) + '. ' + instr + ' : *********\n')
+    print(instrDes)
+    print('\nRegisters $0- $4 \n', _register)
     print('\nDynamic Instr Count ', _DIC)
-    print('\nMemory contents 0x2000 - 0x2050 ', _mem)
-    print('\nhi = ', _hi)
-    print('lo = ', _lo)
+    print('\nMemory contents 0xff - 0x64 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
+    input()
 
-    
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Convert line from hex into bin
+def ConvertHexToBin(_line):
+    #remove 0x then convert.
+    _line.replace("0x","")
+    _line = str(bin(int(_line, 16)).zfill(8))
+    _line = _line.replace("0b","")
+    return _line
+
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Convert the hex into int in an asm instruction. ex: lw $t, offset($s) converts offset to int.
 def ConvertHexToInt(_line):
     i = ""
     for item in _line:
@@ -105,28 +288,6 @@ def ConvertHexToInt(_line):
             
     return _line
 
-
-
-def main():
-    file = open(SelectFile("prog.asm"), r)
-
-    program = []
-    for line in file:
-        if line.count('#'):
-            line = list(line)
-            line[line.index('#'):-1] = ''
-            line = ''.join(line)
-        if line[0] == '\n':
-            continue
-        line = line.replace('\n','')
-        instr = line[0:]
-        program.append(instr)       # since PC increment by 4 every cycle,
-        program.append(0)           # let's align the program code by every
-        program.append(0)           # 4 lines
-        program.append(0)
-
-    # We SHALL start the simulation! 
-    sim(program)
 
 if __name__ == '__main__':
     main()
