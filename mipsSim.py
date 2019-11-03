@@ -1,11 +1,12 @@
 from __future__ import print_function
+import os
 
 # Start of program
 def main():
-    file = open("test.asm", "r") # Opens the file
+    file = open(SelectFile("prog.txt"), 'r') # Opens the file
     asm = file.readlines() # Gets a list of every line in file
 
-    program = [] # Whats this?
+    program = [] # Whats this? list
 
     for line in asm:    # For every line in the asm file
         if line.count('#'):
@@ -18,6 +19,10 @@ def main():
             continue
         line = line.replace('\n','')
 
+        #If user entered a Hex file
+        if line.count("0x"):
+            line = ConvertHexToBin(line)
+
         instr = line[0:]
         program.append(instr)
         program.append(0)           # since PC increment by 4 every cycle,
@@ -25,13 +30,32 @@ def main():
         program.append(0)
 
     # We SHALL start the simulation!
-    print("The code that will be converted to binary is ")
-    print(program)
-    machineCode = machineTranslation(program) # Translates the english assembly code to machine code
-    sim(machineCode) # Starts the assembly simulation with the assembly program machine code as input
+    #machineCode = machineTranslation(program) # Translates the english assembly code to machine code
+    sim(program) # Starts the assembly simulation with the assembly program machine code as # FUNCTION: read input file
 
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Ask user to enter the file name. If user press enter the applicaiton will take the default file.
+def SelectFile(defaultFile):
 
-# Remember where each of the jump label is, and the target location 
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+
+    # Select  file, default is prog.asm
+    while True:
+        cktFile = defaultFile
+        print("\nRead asm file: use " + cktFile + "?" + " Enter to accept or type filename: ")
+        userInput = input()
+        if userInput == "":
+            userInput = defaultFile
+            return userInput
+        else:
+            cktFile = os.path.join(script_dir, userInput)
+            if not os.path.isfile(cktFile):
+                print("File does not exist. \n")
+            else:
+                return userInput
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Remember where each of the jump label is, and the target location 
 def saveJumpLabel(asm,labelIndex, labelName):
     lineCount = 0
     for line in asm:
@@ -44,8 +68,8 @@ def saveJumpLabel(asm,labelIndex, labelName):
     for item in range(asm.count('\n')): # Remove all empty lines '\n'
         asm.remove('\n')
 
-
-# Translates the assembly to machine code and stores it back in program []
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Translates the assembly to machine code and stores it back in program []
 def machineTranslation(program):
     PC = 0 # Used to end the while loop
     instructionList = {'addi': 1000} # Stores the opcodes of all our assembly instructions
@@ -100,7 +124,8 @@ def machineTranslation(program):
     return machineCode
 
 
-# Function reads binary code instruction
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: TBD
 def sim(program):
     finished = False      # Is the simulation finished? 
     PC = 0                # Program Counter
@@ -110,6 +135,8 @@ def sim(program):
     DIC = 0               # Dynamic Instr Count
 
     while(not(finished)):
+        instruction = ""
+        instrDescription = ""
         if PC == len(program) - 4:
             finished = True
         if PC >= len(program):
@@ -119,39 +146,101 @@ def sim(program):
 
 
         # HERES WHERE THE INSTRUCTIONS GO!
-        # ----------------------------------------------------------------------------------------------- ADDI Done!
-        if fetch[0:4] == '1000': # Reads the Opcode
-            print("Will now addi")
+        # ----------------------------------------------------------------------------------------------- ADDI
+        if fetch[0:4] == '0000': # Reads the Opcode
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             imm = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] + imm
-            print("register " + str(rx) + " is now added by " + str(imm))
-            print(register[rx])
+            # print out the updates
+            instruction = "addi $" + str(rx) + ", " + str(imm)
+            instrDescription = "register " + str(rx) + " is now added by " + str(imm)
 
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0001': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0010': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0011': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0100': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0101': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0110': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '0111': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '1000': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '1001': # Reads the Opcode
+            PC += 4
+
+
+        # ----------------------------------------------------------------------------------------------- 
+        elif fetch[0:4] == '1010': # Reads the Opcode
+            PC += 4
+
+        
         else:
             # This is not implemented on purpose
             print('Not implemented\n')
+            PC += 4
+        printInfo(register,DIC,mem[8192:8272], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register[0:3],DIC,mem[8192:8272], PC)
+    printInfo(register,DIC,mem[8192:8272], PC,"","")
     input()
 
-
-def printInfo(_register, _DIC, _mem, _PC):
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: to print out each instruction line is running with its updates 
+def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     num = int(_PC/4)
-    #NOTE: I dont know what these 3 lines do so i just left them
-    #inst = asmCopy[num-1] #
-    #inst = inst.replace("\n",'')
-   # print('******* Instruction Number ' + str(num) + '. ' + inst + ' : *********\n')
-    print('Registers $8 - $23 \n', _register)
+    print('******* Instruction Number ' + str(num) + '. ' + instr + ' : *********\n')
+    print(instrDes)
+    print('\nRegisters $0- $4 \n', _register)
     print('\nDynamic Instr Count ', _DIC)
     print('\nMemory contents 0x2000 - 0x2050 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
+    input()
 
-    
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Convert line from hex into bin
+def ConvertHexToBin(_line):
+    #remove 0x then convert.
+    _line.replace("0x","")
+    _line = str(bin(int(_line, 16)).zfill(8))
+    _line = _line.replace("0b","")
+    return _line
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#---- FUNCTION: Convert the hex into int in an asm instruction. ex: lw $t, offset($s) converts offset to int.
 def ConvertHexToInt(_line):
     i = ""
     for item in _line:
