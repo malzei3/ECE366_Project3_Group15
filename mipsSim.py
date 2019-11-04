@@ -146,7 +146,7 @@ def sim(program):
 
 
         # ----------------------------------------------------------------------------------------------- init
-        elif fetch[0:4] == '00': # Reads the Opcode
+        elif fetch[0:2] == '00': # Reads the Opcode
             PC += 4
             rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
             imm = int(fetch[4:], 2) # Reads the immediate
@@ -156,15 +156,15 @@ def sim(program):
             instrDescription = "Register " + str(rx) + " is now equal to " + str(imm)
 
 
-        # ----------------------------------------------------------------------------------------------- sub
+        # ----------------------------------------------------------------------------------------------- subi
         elif fetch[0:4] == '0111': # Reads the Opcode
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
-            register[rx] = register[rx] - register[ry]
+            register[rx] = register[rx] - ry
             # print out the updates
             instruction = "sub $" + str(rx) + ", $" + str(ry)
-            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(register[ry])
+            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(ry)
 
 
         # ----------------------------------------------------------------------------------------------- bezR0
@@ -180,7 +180,7 @@ def sim(program):
 
 
         # ----------------------------------------------------------------------------------------------- end
-        elif fetch[0:4] == '0100': # Reads the Opcode
+        elif fetch[0:8] == '11111111': # Reads the Opcode
             instruction = "end "
             instrDescription = "The program stopped!! "
             break
@@ -258,7 +258,7 @@ def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     print('\nMemory contents 0xff - 0x64 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
-    input()
+    #input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
