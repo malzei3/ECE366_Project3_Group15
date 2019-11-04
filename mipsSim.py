@@ -234,6 +234,16 @@ def sim(program):
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
+
+        # ----------------------------------------------------------------------------------------------- saal
+        elif fetch[0:4] == '1101': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[4:5], 2) # Reads the next bit which is rx (Either r0 or r1)
+            imm = int(fetch[5:], 2) # Reads the immediate (3 bits)
+            mem[255 + imm] = register[rx]
+            # print out the updates
+            instruction = "sb $" + str(rx) + ", $" + str(255 + imm)
+            instrDescription = "Memory address " + str(255 + imm) + " is now equal to " + str(register[rx])
         
         else:
             # This is not implemented on purpose
