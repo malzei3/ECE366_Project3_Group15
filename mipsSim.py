@@ -238,23 +238,23 @@ def sim(program):
             A = register[rx]
             B = register[ry]
 
-            instrDescription = "Register " + str(rx) + " is now equal to hash of" + str(A) + "and" + str(B)
+            instrDescription = "Register " + str(rx) + " is now equal to hash of " + str(A) + " and " + str(B)
 
             for i in range(1,6):
                 C = bin(A * B).replace("0b","")
                 a = len(C)-8
-                lo = C[a:]
+                lo = C[a:].zfill(8)
                 hi = C[0:a].zfill(8)
                 xor = int(hi) ^ int(lo)
                 A = int(str(xor),2)
 
-            A = bin(A).replace("0b","")
-            lo = A[4:]
+            A = bin(A).replace("0b","").zfill(8)
+            lo = A[4:].zfill(4)
             hi = A[0:4].zfill(4)
             C = int(str(int(hi) ^ int(lo)),2)
-            C = bin(C).replace("0b","")
+            C = bin(C).replace("0b","").zfill(4)
             lo = C[2:].zfill(2)
-            hi = C[0:1].zfill(2)
+            hi = C[0:2].zfill(2)
             C = int(str(int(hi) ^ int(lo)),2)
             register[rx] = C
 
@@ -305,7 +305,7 @@ def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     print('\nMemory contents 0xff - 0x64 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
-    #input()
+    input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
