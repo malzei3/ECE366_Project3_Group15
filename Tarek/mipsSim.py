@@ -139,6 +139,7 @@ def sim(program):
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             imm = int(fetch[6:], 2) # Reads the immediate
+
             register[rx] = register[rx] + imm
             # print out the updates
             instruction = "addi $" + str(rx) + ", " + str(imm)
@@ -146,7 +147,7 @@ def sim(program):
 
 
         # ----------------------------------------------------------------------------------------------- init
-        elif fetch[0:4] == '00': # Reads the Opcode
+        elif fetch[0:2] == '00': # Reads the Opcode
             PC += 4
             rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
             imm = int(fetch[4:], 2) # Reads the immediate
@@ -156,15 +157,15 @@ def sim(program):
             instrDescription = "Register " + str(rx) + " is now equal to " + str(imm)
 
 
-        # ----------------------------------------------------------------------------------------------- sub
+        # ----------------------------------------------------------------------------------------------- subi
         elif fetch[0:4] == '0111': # Reads the Opcode
             PC += 4
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
-            register[rx] = register[rx] - register[ry]
+            register[rx] = register[rx] - ry
             # print out the updates
             instruction = "sub $" + str(rx) + ", $" + str(ry)
-            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(register[ry])
+            instrDescription = "Register " + str(rx) + " is now subtracted by " + str(ry)
 
 
         # ----------------------------------------------------------------------------------------------- bezR0
@@ -180,7 +181,7 @@ def sim(program):
 
 
         # ----------------------------------------------------------------------------------------------- end
-        elif fetch[0:4] == '0100': # Reads the Opcode
+        elif fetch[0:8] == '0100': # Reads the Opcode
             instruction = "end "
             instrDescription = "The program stopped!! "
             break
@@ -230,10 +231,36 @@ def sim(program):
             instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
 
         # ----------------------------------------------------------------------------------------------- hash
-        elif fetch[0:4] == '1100': # Reads the Opcode
+        elif fetch[0:2] == '11': # Reads the Opcode
             PC += 4
-            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
-            ry = int(fetch[6:], 2) # Reads the immediate
+            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
+            ry = register[int(fetch[4:6], 2)]
+            rz = register[int(fetch[6:8], 2)]
+            A = 2
+            B = 255
+
+            for i in range(1,6):
+                C = bin(A * B).replace("0b","")
+                a = len(C)-8
+                lo = C[a:]
+                hi = C[0:a].zfill(8)
+                xor = int(hi) ^ int(lo)
+                A = int(str(xor),2)
+
+            A = bin(A).replace("0b","")
+            lo = A[4:]
+            hi = A[0:4].zfill(4)
+            C = int(str(int(hi) ^ int(lo)),2)
+            C = bin(C).replace("0b","")
+            lo = C[2:].zfill(2)
+            hi = C[0:1].zfill(2)
+            C = int(str(int(hi) ^ int(lo)),2)
+            register[rx] = C
+
+            instruction = "hash $" + str(rx) + ", $" + str(ry) + ", $" + str(rz)
+            instrDescription = "Register " + str(rx) + " is now equal to hash of" + str(register[ry]) + "and" + str(register[rz])
+
+
         
         else:
             # This is not implemented on purpose
@@ -258,7 +285,7 @@ def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
     print('\nMemory contents 0xff - 0x64 ', _mem)
     print('\nPC = ', _PC)
     print('\nPress enter to continue.......')
-    input()
+    #input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
