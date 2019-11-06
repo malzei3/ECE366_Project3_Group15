@@ -100,8 +100,8 @@ def machineTranslation(program):
             completeMachineCode += char
         print("The complete machine code for the instruction is " + completeMachineCode)
         machineCode[PC] = completeMachineCode # The correct final binary value is now in machineCode
-        machineCode.append(0)  # since PC increment by 4 every cycle,
-        machineCode.append(0)  # let's align the program code by every 4 lines
+        machineCode.append(0)  # since PC increment by every cycle,
+        machineCode.append(0)  # let's align the program code by every 1 line
         machineCode.append(0)
         PC += 4 # Used to end the while loop
     print("The machine code for the program is ")
@@ -233,8 +233,8 @@ def sim(program):
         # ----------------------------------------------------------------------------------------------- hash
         elif fetch[0:4] == '1100': # Reads the Opcode
             PC += 1
-            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
-            ry = int(fetch[4:6], 2) # Reads the next two bits which is ry
+            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
+            ry = int(fetch[6:8], 2) # Reads the next two bits which is ry
             A = register[rx]
             B = register[ry]
 
@@ -245,17 +245,17 @@ def sim(program):
                 a = len(C)-8
                 lo = C[a:].zfill(8)
                 hi = C[0:a].zfill(8)
-                xor = int(hi) ^ int(lo)
-                A = int(str(xor),2)
+                xor = int(hi,2) ^ int(lo,2)
+                A = xor
 
             A = bin(A).replace("0b","").zfill(8)
             lo = A[4:].zfill(4)
             hi = A[0:4].zfill(4)
-            C = int(str(int(hi) ^ int(lo)),2)
+            C = int(hi,2) ^ int(lo,2)
             C = bin(C).replace("0b","").zfill(4)
             lo = C[2:].zfill(2)
             hi = C[0:2].zfill(2)
-            C = int(str(int(hi) ^ int(lo)),2)
+            C = int(hi,2) ^ int(lo,2)
             register[rx] = C
 
             instruction = "hash $" + str(rx) + ", $" + str(ry)
