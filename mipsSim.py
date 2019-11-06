@@ -25,9 +25,6 @@ def main():
 
         instr = line[0:]
         program.append(instr)
-        program.append(0)           # since PC increment by 4 every cycle,
-        program.append(0)           # let's align the program code by every 4 lines
-        program.append(0)
 
     # We SHALL start the simulation!
     #machineCode = machineTranslation(program) # Translates the english assembly code to machine code
@@ -125,7 +122,7 @@ def sim(program):
     while(not(finished)):
         instruction = ""
         instrDescription = ""
-        if PC == len(program) - 4:
+        if PC == len(program) + 10:
             finished = True
         if PC >= len(program):
             break
@@ -136,10 +133,12 @@ def sim(program):
         # HERES WHERE THE INSTRUCTIONS GO!
         # ----------------------------------------------------------------------------------------------- addi
         if fetch[0:4] == '1000': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             imm = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] + imm
+            if register[rx] > 255: # Overflow support
+                register[rx] = register[rx] - 255 - 1
             # print out the updates
             instruction = "addi $" + str(rx) + ", " + str(imm)
             instrDescription = "Register " + str(rx) + " is now added by " + str(imm)
@@ -147,7 +146,7 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- init
         elif fetch[0:2] == '00': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
             imm = int(fetch[4:], 2) # Reads the immediate
             register[rx] = imm
@@ -158,10 +157,12 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- subi
         elif fetch[0:4] == '0111': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
             register[rx] = register[rx] - ry
+            if register[rx] <= 0: #Underflow support
+                register[rx] = 255 - abs(register[rx] + 1)
             # print out the updates
             instruction = "sub $" + str(rx) + ", $" + str(ry)
             instrDescription = "Register " + str(rx) + " is now subtracted by " + str(ry)
@@ -171,12 +172,12 @@ def sim(program):
         elif fetch[0:4] == '1011': # Reads the Opcode
             imm = int(fetch[4:], 2) # Reads the immediate
             if register[0] == 0:
-                PC = PC + (imm*4)
+                PC = PC + imm
             else:
-                PC += 4
+                PC += 1
             # print out the updates
             instruction = "bezR0 " + str(imm)
-            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+            instrDescription = "Instruction number" + str(PC/1) + " will run next "
 
 
         # ----------------------------------------------------------------------------------------------- end
@@ -188,14 +189,14 @@ def sim(program):
         # ----------------------------------------------------------------------------------------------- jmp 
         elif fetch[0:4] == '0101': # Reads the Opcode
             imm = int(fetch[4:], 2) # Reads the immediate
-            PC = PC + (imm*4)
+            PC = PC + imm
             # print out the updates
             instruction = "jmp " + str(imm)
-            instrDescription = "Instruction number" + str(PC/4) + " will run next "
+            instrDescription = "Instruction number" + str(PC/1) + " will run next "
 
         # ----------------------------------------------------------------------------------------------- eq
         elif fetch[0:4] == '0110': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
 
@@ -211,7 +212,7 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- sb
         elif fetch[0:4] == '1001': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
             mem[register[ry]] = register[rx]
@@ -221,7 +222,7 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- lb
         elif fetch[0:4] == '1010': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
             ry = int(fetch[6:], 2) # Reads the immediate
             register[rx] = mem[register[ry]]
@@ -229,9 +230,44 @@ def sim(program):
             instruction = "lb $" + str(rx) + ", $" + str(ry)
             instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
 
+<<<<<<< HEAD
+        # ----------------------------------------------------------------------------------------------- hash
+        elif fetch[0:4] == '1100': # Reads the Opcode
+            PC += 1
+            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
+            ry = int(fetch[4:6], 2) # Reads the next two bits which is ry
+            A = register[rx]
+            B = register[ry]
+
+            instrDescription = "Register " + str(rx) + " is now equal to hash of" + str(A) + "and" + str(B)
+
+            for i in range(1,6):
+                C = bin(A * B).replace("0b","")
+                a = len(C)-8
+                lo = C[a:]
+                hi = C[0:a].zfill(8)
+                xor = int(hi) ^ int(lo)
+                A = int(str(xor),2)
+
+            A = bin(A).replace("0b","")
+            lo = A[4:]
+            hi = A[0:4].zfill(4)
+            C = int(str(int(hi) ^ int(lo)),2)
+            C = bin(C).replace("0b","")
+            lo = C[2:].zfill(2)
+            hi = C[0:1].zfill(2)
+            C = int(str(int(hi) ^ int(lo)),2)
+            register[rx] = C
+
+            instruction = "hash $" + str(rx) + ", $" + str(ry)
+
+
+
+=======
+>>>>>>> faf41881a4f3ea2d942cab61a898835c21109506
         # ----------------------------------------------------------------------------------------------- saal
         elif fetch[0:4] == '1101': # Reads the Opcode
-            PC += 4
+            PC += 1
             rx = int(fetch[4:5], 2) # Reads the next bit which is rx (Either r0 or r1)
             imm = int(fetch[5:], 2) # Reads the immediate (3 bits)
             mem[255 + imm] = register[rx]
@@ -239,6 +275,17 @@ def sim(program):
             instruction = "sb $" + str(rx) + ", $" + str(255 + imm)
             instrDescription = "Memory address " + str(255 + imm) + " is now equal to " + str(register[rx])
 
+<<<<<<< HEAD
+        # ----------------------------------------------------------------------------------------------- cpy
+        elif fetch[0:4] == '1110': # Reads the Opcode
+            PC += 1
+            rx = int(fetch[4:5], 2) # Reads the next bit which is rx
+            ry = int(fetch[5:], 2) # Reads the register ry
+            register[rx] = ry
+            # print out the updates
+            instruction = "cpy $" + str(rx) + ", $" + str(ry)
+            instrDescription = "Register " + str(rx) + "is now set to the value of register " + str(ry)
+=======
         # ----------------------------------------------------------------------------------------------- hash
         elif fetch[0:4] == '1110': # Reads the Opcode
             PC += 4
@@ -269,11 +316,12 @@ def sim(program):
 
             instruction = "hash $" + str(rx) + ", $" + str(ry)
             
+>>>>>>> faf41881a4f3ea2d942cab61a898835c21109506
         
         else:
             # This is not implemented on purpose
             print('Not implemented\n')
-            PC += 4
+            PC += 1
         printInfo(register,DIC,mem[0:100], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
@@ -285,7 +333,7 @@ def sim(program):
 # -------------------------------------------------------------------------------------------------------------------- #
 #---- FUNCTION: to print out each instruction line is running with its updates 
 def printInfo(_register, _DIC, _mem, _PC, instr, instrDes):
-    num = int(_PC/4)
+    num = int(_PC/1)
     print('******* Instruction Number ' + str(num) + '. ' + instr + ' : *********\n')
     print(instrDes)
     print('\nRegisters $0- $4 \n', _register)
