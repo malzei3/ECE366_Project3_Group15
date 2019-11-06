@@ -244,7 +244,7 @@ def sim(program):
             PC += 4
             rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
             ry = int(fetch[4:6], 2) # Reads the next two bits which is ry
-            A = register{rx}
+            A = register[rx]
             B = register[ry]
 
             instrDescription = "Register " + str(rx) + " is now equal to hash of" + str(A) + "and" + str(B)
@@ -267,7 +267,7 @@ def sim(program):
             C = int(str(int(hi) ^ int(lo)),2)
             register[rx] = C
 
-            instruction = "hash $" + str(rx) + ", $" + str(ry) + "
+            instruction = "hash $" + str(rx) + ", $" + str(ry)
             
         
         else:
