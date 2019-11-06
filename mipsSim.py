@@ -122,9 +122,9 @@ def sim(program):
     while(not(finished)):
         instruction = ""
         instrDescription = ""
-        if PC == len(program) + 10:
+        if PC == len(program):
             finished = True
-        if PC >= len(program):
+        if PC > len(program) and PC < len(program):
             break
         fetch = program[PC]
         DIC += 1
@@ -170,8 +170,14 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- bezR0
         elif fetch[0:4] == '1011': # Reads the Opcode
-            imm = int(fetch[4:], 2) # Reads the immediate
-            if register[0] == 0:
+            imm = fetch[4:] # Reads the immediate
+
+            if imm[0] == 0:
+                imm = int(imm[1:4],2)
+            else:
+               imm = int(imm[1:4],2) * (-1)
+
+            if register[0] != 0:
                 PC = PC + imm
             else:
                 PC += 1
@@ -188,7 +194,13 @@ def sim(program):
 
         # ----------------------------------------------------------------------------------------------- jmp 
         elif fetch[0:4] == '0101': # Reads the Opcode
-            imm = int(fetch[4:], 2) # Reads the immediate
+            imm = fetch[4:]  # Reads the immediate
+
+            if imm[0] == 0:
+                imm = int(imm[1:4],2)
+            else:
+               imm = int(imm[1:4],2) * (-1)
+
             PC = PC + imm
             # print out the updates
             instruction = "jmp " + str(imm)
