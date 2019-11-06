@@ -8,13 +8,14 @@ init r1, 4 # Sets r1 to 5 (This will store the hash result)
 
 hashing:
 hash r1, r2 # Hashes r1 and r2, r1 is set as result.
+minc r1
 
 sb r1, r0	# Stores the hash result to the appropriate memory location
 
 addi r0, 1 	# r0 increments 
 cpy r1, r0	# r1 is set equal to r0
 
-bezR0 hashing	# When r0 == 0 the loop will end
+bnezR0 hashing	# When r0 != 0 the loop will end
 
 #We still need to store Hash results in mem[256] - mem[260]
 
@@ -22,28 +23,34 @@ init r0, 1
 init r1, 1
 
 hash r1, r2
+minc r1
 
 saal r1, r0
 addi r0, 1 	# r0 increments 
 cpy r1, r0	# r1 is set equal to r0
 
 hash r1, r2
+minc r1
 
 saal r1, r0
 addi r0, 1 	# r0 increments 
 cpy r1, r0	# r1 is set equal to r0
 
 hash r1, r2
+minc r1
 
 saal r1, r0
 addi r0, 1 	# r0 increments 
 cpy r1, r0	# r1 is set equal to r0
 
 hash r1, r2
+minc r1
 
 saal r1, r0
 addi r0, 1 	# r0 increments 
 cpy r1, r0	# r1 is set equal to r0
+
+end
 
 
 

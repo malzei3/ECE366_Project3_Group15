@@ -122,9 +122,14 @@ def sim(program):
     while (not (finished)):
         instruction = ""
         instrDescription = ""
-        if PC >= len(program):
+        if PC == len(program):
+            finished = True
+        if PC > len(program) and PC < len(program):
             break
-        fetch = program[PC]
+        try:
+            fetch = program[PC]
+        except:
+            break
         DIC += 1
 
         # HERES WHERE THE INSTRUCTIONS GO!
@@ -165,7 +170,7 @@ def sim(program):
             instrDescription = "Register " + str(rx) + " is now subtracted by " + str(ry)
 
 
-        # ----------------------------------------------------------------------------------------------- bezR0
+        # ----------------------------------------------------------------------------------------------- bnezR0
         elif fetch[0:4] == '1011':  # Reads the Opcode
             imm = fetch[4:]  # Reads the immediate
 
@@ -190,18 +195,18 @@ def sim(program):
             break
 
         # ----------------------------------------------------------------------------------------------- jmp
-        elif fetch[0:4] == '0101':  # Reads the Opcode
-            imm = fetch[4:]  # Reads the immediate
+        #elif fetch[0:4] == '0101':  # Reads the Opcode
+            #imm = fetch[4:]  # Reads the immediate
 
-            if imm[0] == 0:
-                imm = int(imm[1:4], 2)
-            else:
-                imm = int(imm[1:4], 2) * (-1)
+            #if imm[0] == 0:
+                #imm = int(imm[1:4], 2)
+            #else:
+                #imm = int(imm[1:4], 2) * (-1)
 
-            PC = PC + imm
+            #PC = PC + imm
             # print out the updates
-            instruction = "jmp " + str(imm)
-            instrDescription = "Instruction number" + str(PC / 1) + " will run next "
+            #instruction = "jmp " + str(imm)
+            #instrDescription = "Instruction number" + str(PC / 1) + " will run next "
 
         # ----------------------------------------------------------------------------------------------- eq
         elif fetch[0:4] == '0110':  # Reads the Opcode
@@ -231,15 +236,12 @@ def sim(program):
             instruction = "sb $" + str(rx) + ", $" + str(ry)
             instrDescription = "Memory address " + str(register[ry]) + " is now equal to " + str(register[rx])
 
-        # ----------------------------------------------------------------------------------------------- lb
-        elif fetch[0:4] == '1010':  # Reads the Opcode
+        # ----------------------------------------------------------------------------------------------- minc (memory increment)
+        elif fetch[0:4] == '1010':
             PC += 1
             rx = int(fetch[4:6], 2)  # Reads the next two bits which is rx
-            ry = int(fetch[6:], 2)  # Reads the immediate
-            register[rx] = mem[register[ry]]
-            # print out the updates
-            instruction = "lb $" + str(rx) + ", $" + str(ry)
-            instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
+            imm = int(fetch[6:], 2)  # Reads the immediate
+            mem[register[rx]] += imm
 
         # ----------------------------------------------------------------------------------------------- hash
         elif fetch[0:4] == '1100':  # Reads the Opcode
@@ -301,8 +303,8 @@ def sim(program):
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register, DIC, mem[0:100], PC, instruction, instrDescription)
-    input()
+    printInfo(register, DIC, mem[0:260], PC, instruction, instrDescription)
+    #input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
