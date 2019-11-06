@@ -122,9 +122,7 @@ def sim(program):
     while (not (finished)):
         instruction = ""
         instrDescription = ""
-        if PC == len(program):
-            finished = True
-        if PC > len(program) and PC < len(program):
+        if PC >= len(program):
             break
         fetch = program[PC]
         DIC += 1
@@ -304,7 +302,7 @@ def sim(program):
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
     printInfo(register, DIC, mem[0:100], PC, instruction, instrDescription)
-    #input()
+    input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
