@@ -229,12 +229,6 @@ def sim(program):
             instruction = "lb $" + str(rx) + ", $" + str(ry)
             instrDescription = "Register " + str(rx) + " is now equal to " + str(mem[register[ry]])
 
-        # ----------------------------------------------------------------------------------------------- hash
-        elif fetch[0:4] == '1100': # Reads the Opcode
-            PC += 4
-            rx = int(fetch[4:6], 2) # Reads the next two bits which is rx
-            ry = int(fetch[6:], 2) # Reads the immediate
-
         # ----------------------------------------------------------------------------------------------- saal
         elif fetch[0:4] == '1101': # Reads the Opcode
             PC += 4
@@ -244,6 +238,36 @@ def sim(program):
             # print out the updates
             instruction = "sb $" + str(rx) + ", $" + str(255 + imm)
             instrDescription = "Memory address " + str(255 + imm) + " is now equal to " + str(register[rx])
+
+        # ----------------------------------------------------------------------------------------------- hash
+        elif fetch[0:2] == '11': # Reads the Opcode
+            PC += 4
+            rx = int(fetch[2:4], 2) # Reads the next two bits which is rx
+            ry = register[int(fetch[4:6], 2)] # Reads the next two bits which is ry
+            rz = register[int(fetch[6:8], 2)] # Reads the next two bits which is rz
+            A = 2
+            B = 255
+
+            for i in range(1,6):
+                C = bin(A * B).replace("0b","")
+                a = len(C)-8
+                lo = C[a:]
+                hi = C[0:a].zfill(8)
+                xor = int(hi) ^ int(lo)
+                A = int(str(xor),2)
+
+            A = bin(A).replace("0b","")
+            lo = A[4:]
+            hi = A[0:4].zfill(4)
+            C = int(str(int(hi) ^ int(lo)),2)
+            C = bin(C).replace("0b","")
+            lo = C[2:].zfill(2)
+            hi = C[0:1].zfill(2)
+            C = int(str(int(hi) ^ int(lo)),2)
+            register[rx] = C
+
+            instruction = "hash $" + str(rx) + ", $" + str(ry) + ", $" + str(rz)
+            instrDescription = "Register " + str(rx) + " is now equal to hash of" + str(register[ry]) + "and" + str(register[rz])
         
         else:
             # This is not implemented on purpose
