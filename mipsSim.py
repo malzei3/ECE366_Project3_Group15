@@ -299,7 +299,7 @@ def sim(program):
             # This is not implemented on purpose
             print('Not implemented\n')
             PC += 1
-        printInfo(register, DIC, mem[0:100], PC, instruction, instrDescription)
+        printInfo(register, DIC, mem[0:260], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
