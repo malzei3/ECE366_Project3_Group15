@@ -169,63 +169,6 @@ def sim(program):
             instruction = "sub $" + str(rx) + ", $" + str(ry)
             instrDescription = "Register " + str(rx) + " is now subtracted by " + str(ry)
 
-
-        # ----------------------------------------------------------------------------------------------- bnezR0
-        elif fetch[0:4] == '1011':  # Reads the Opcode
-            imm = fetch[4:]  # Reads the immediate
-
-            if imm[0] == 0:
-                imm = int(imm[1:4], 2)
-            else:
-                imm = int(imm[1:4], 2) * (-1)
-
-            if register[0] != 0:
-                PC = PC + imm
-            else:
-                PC += 1
-            # print out the updates
-            instruction = "bezR0 " + str(imm)
-            instrDescription = "Instruction number" + str(PC / 1) + " will run next "
-
-
-        # ----------------------------------------------------------------------------------------------- end
-        elif fetch[0:8] == '11111111':  # Reads the Opcode
-            instruction = "end "
-            instrDescription = "The program stopped!! "
-            break
-
-        # ----------------------------------------------------------------------------------------------- jmp
-        #elif fetch[0:4] == '0101':  # Reads the Opcode
-            #imm = fetch[4:]  # Reads the immediate
-
-            #if imm[0] == 0:
-                #imm = int(imm[1:4], 2)
-            #else:
-                #imm = int(imm[1:4], 2) * (-1)
-
-            #PC = PC + imm
-            # print out the updates
-            #instruction = "jmp " + str(imm)
-            #instrDescription = "Instruction number" + str(PC / 1) + " will run next "
-
-        # ----------------------------------------------------------------------------------------------- eq
-        elif fetch[0:4] == '0110':  # Reads the Opcode
-            PC += 1
-            rx = int(fetch[4:6], 2)  # Reads the next two bits which is rx
-            ry = int(fetch[6:], 2)  # Reads the immediate
-
-            if register[rx] == register[ry]:
-                register[rx] = 1
-                instrDescription = "Register " + str(rx) + " is equal to " + str(register[ry]) + ". Register " + str(
-                    rx) + " is now equal to 1."
-            else:
-                register[rx] = 0
-                instrDescription = "Register " + str(rx) + " is not equal to " + str(
-                    register[ry]) + ". Register " + str(rx) + " is now equal to 0."
-
-            # print out the updates
-            instruction = "eq $" + str(rx) + ", $" + str(ry)
-
         # ----------------------------------------------------------------------------------------------- sb
         elif fetch[0:4] == '1001':  # Reads the Opcode
             PC += 1
@@ -299,11 +242,11 @@ def sim(program):
             # This is not implemented on purpose
             print('Not implemented\n')
             PC += 1
-        printInfo(register, DIC, mem[0:260], PC, instruction, instrDescription)
+        printInfo(register, DIC, mem[0:259], PC, instruction, instrDescription)
 
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
-    printInfo(register, DIC, mem[0:260], PC, instruction, instrDescription)
+    printInfo(register, DIC, mem[0:259], PC, instruction, instrDescription)
     #input()
 
 
