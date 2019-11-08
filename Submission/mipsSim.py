@@ -247,7 +247,7 @@ def sim(program):
     # Finished simulations. Let's print out some stats
     print('***Simulation finished***\n')
     printInfo(register, DIC, mem[0:259], PC, instruction, instrDescription)
-    #input()
+    input()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
